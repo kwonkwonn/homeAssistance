@@ -12,7 +12,7 @@ func StartListening(){
 }
 
 func ModuleController(name string,  channel chan struct{}){
-	cmd:= exec.Command(".,/controlNods/"+name)
+	cmd:= exec.Command("../controlNods/"+name)
 		err:=cmd.Start()
 		if err!=nil{
 		panic( err)		

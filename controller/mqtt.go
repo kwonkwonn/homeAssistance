@@ -183,7 +183,7 @@ func (h *ExampleHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
 }
 func textHandler(control moduleControlChannel,payload string ){
 	text:= strings.Split(string(payload), " ")
-
+	fmt.Println(text[0],text[1],text[2])
 	if text[0]=="0"{
 		if text[1]=="0"{
 			select{
@@ -193,14 +193,18 @@ func textHandler(control moduleControlChannel,payload string ){
 		}
 		}else if text[1]=="1"{
 			control.fanChan<-struct{}{}
+			fmt.Print("fan on")
 			go ModuleController("fan", control.fanChan)
 	}else if text[0]=="1"{
 		if text[1]=="0"{
 			select{
+				
 				case <-control.fanChan:{}
 				default:
 				}
 			}else if text[1]=="1"{
+				fmt.Print("led on")
+
 				go ModuleController("LED", control.LEDChan)
 
 			}
