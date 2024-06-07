@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	mqtt "github.com/mochi-mqtt/server/v2"
 	"github.com/mochi-mqtt/server/v2/hooks/auth"
@@ -181,32 +182,33 @@ func (h *ExampleHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
 	h.Log.Info("published to client", "client", cl.ID, "payload", string(pk.Payload))
 	
 }
-func textHandler(control moduleControlChannel,payload string ){
-	text:= strings.Split(string(payload), " ")
-	fmt.Println(text[0],text[1],text[2])
-	if text[0]=="0"{
-		if text[1]=="0"{
-			select{
-				case <-control.fanChan:{}
-				default:
-				}
-		}
-		}else if text[1]=="1"{
-			control.fanChan<-struct{}{}
-			fmt.Print("fan on")
-			go ModuleController("fan", control.fanChan)
-	}else if text[0]=="1"{
-		if text[1]=="0"{
-			select{
-				
-				case <-control.fanChan:{}
-				default:
-				}
-			}else if text[1]=="1"{
-				fmt.Print("led on")
-
-				go ModuleController("LED", control.LEDChan)
-
-			}
-	}
+func textHandler(control moduleControlChannel, payload string) {
+    text := strings.Split(string(payload), " ")
+    fmt.Println(text[1])
+    if text[0] == "0" {
+        if text[1] == "0" {
+            select {
+            case <-control.fanChan:
+            case <-time.After(1 * time.Second): // 1초 동안 기다린 후 타임아웃
+                fmt.Println("Timeout waiting for fan channel")
+            }
+        } else if text[1] == "1" {
+            fmt.Println("fan on")
+            control.fanChan <- struct{}{}
+            go ModuleController("fan", control.fanChan)
+        }
+    } else if text[0] == "1" {
+        if text[1] == "0" {
+            select {
+            case <-control.fanChan:
+            case <-time.After(1 * time.Second):
+                fmt.Println("Timeout waiting for fan channel")
+            }
+        } else {
+            if text[1] == "1" {
+                fmt.Print("led on")
+                go ModuleController("LED", control.LEDChan)
+            }
+        }
+    }
 }
