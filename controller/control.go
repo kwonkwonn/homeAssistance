@@ -24,6 +24,7 @@ func ModuleController(name string, wg *sync.WaitGroup, channel chan struct{}){
 			select {
 			case <-channel:
 				return
+			default:
 			}
 		}	
 	}()

@@ -5,6 +5,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/mochi-mqtt/server/v2/hooks/auth"
 )
 
 type authenticData struct{
@@ -21,6 +23,8 @@ type moduleControlChannel struct{
 }
 
 func main(){
+	
+	
 	if(len(os.Args)<2){
 		fmt.Println("need enough commands to start")
 		panic("")
@@ -40,9 +44,22 @@ func main(){
 
 func run(){
 	wg:= sync.WaitGroup{}
+	
+	AuthOption:= auth.Options{
+		Ledger: &auth.Ledger{
+		Auth: auth.AuthRules{ // Auth disallows all by default
+			{Username: "kwon", Password: "123", Allow: true},
+		},
+		ACL: auth.ACLRules{ // ACL allows all by default
+			},
+		  },
+		  }
+
+	go MQTTInit(&AuthOption)
+	
 	authentic:=make(chan authenticData)
 	wg.Add(1)
-	client:=InitContainer()
+	_=InitContainer()
 	go userAuthentication(authentic, &wg)
 	fmt.Println("tag you NFC card for verification")
 	var inputData string
@@ -50,12 +67,14 @@ loop:
 	for {
 		time.Sleep(1*time.Second)
 		fmt.Println("looping")
-		// if len(authentic)!=0 {
-		// }
+		
 		select{
 		case data:= <-authentic:{
 			wg.Add(1)
 			fmt.Printf("%s %d",data.Name,data.age)
+			// newAuthRule := auth.AuthRule{Username: "kwon", Password: "123", Allow: true}
+			// if(data.Name!="error"){
+			// 	AuthOption.Ledger.Auth=append(AuthOption.Ledger.Auth, newAuthRule)}
 			go userAuthentication(authentic, &wg)}
 		default:
 		}
