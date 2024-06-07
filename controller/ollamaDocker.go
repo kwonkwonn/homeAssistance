@@ -26,7 +26,6 @@ func InitContainer()(cli *client.Client){
 		panic(err)
 	}
 	var execCheck types.ExecStartCheck
-	cli.ContainerExecCreate(ctx context.Context, container string, config types.ExecConfig) (types.IDResponse, error)
 
 
 	RES,err:=cli.ContainerExecAttach(context.Background(),"09af64e96442", execCheck)

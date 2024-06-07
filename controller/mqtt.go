@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	mqtt "github.com/mochi-mqtt/server/v2"
 	"github.com/mochi-mqtt/server/v2/hooks/auth"
@@ -16,7 +17,7 @@ import (
 	"github.com/mochi-mqtt/server/v2/packets"
 )
 
-func MQTTInit(authHook *auth.Options) {
+func MQTTInit(authHook *auth.Options, control moduleControlChannel) {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
 	go func() {
@@ -56,9 +57,7 @@ func MQTTInit(authHook *auth.Options) {
 		}
 	}()
 
-	// Demonstration of directly publishing messages to a topic via the
-	// `server.Publish` method. Subscribe to `direct/publish` using your
-	// MQTT client to see the messages.
+	
 	// go func() {
 	// 	cl := server.NewClient(nil, "local", "inline", true)
 	// 	for range time.Tick(time.Second * 1) {
@@ -76,8 +75,7 @@ func MQTTInit(authHook *auth.Options) {
 	// 	}
 	// }()
 
-	// There is also a shorthand convenience function, Publish, for easily sending
-	// publish packets if you are not concerned with creating your own packets.
+
 	// go func() {
 	// 	for range time.Tick(time.Second * 5) {
 	// 		err := server.Publish("direct/publish", []byte("packet scheduled message"), false, 0)
@@ -179,5 +177,32 @@ func (h *ExampleHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pac
 }
 
 func (h *ExampleHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
+	textHandler(controller,string(pk.Payload) )
 	h.Log.Info("published to client", "client", cl.ID, "payload", string(pk.Payload))
+	
+}
+func textHandler(control moduleControlChannel,payload string ){
+	text:= strings.Split(string(payload), " ")
+
+	if text[0]=="0"{
+		if text[1]=="0"{
+			select{
+				case <-control.fanChan:{}
+				default:
+				}
+		}
+		}else if text[1]=="1"{
+			control.fanChan<-struct{}{}
+			go ModuleController("fan", control.fanChan)
+	}else if text[0]=="1"{
+		if text[1]=="0"{
+			select{
+				case <-control.fanChan:{}
+				default:
+				}
+			}else if text[1]=="1"{
+				go ModuleController("LED", control.LEDChan)
+
+			}
+	}
 }

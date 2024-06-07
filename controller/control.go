@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -12,8 +11,8 @@ func StartListening(){
 
 }
 
-func ModuleController(name string, wg *sync.WaitGroup, channel chan struct{}){
-	cmd:= exec.Command("python3", "../controlNods/"+name+".py")
+func ModuleController(name string,  channel chan struct{}){
+	cmd:= exec.Command(".,/controlNods/"+name)
 		err:=cmd.Start()
 		if err!=nil{
 		panic( err)		
@@ -29,7 +28,6 @@ func ModuleController(name string, wg *sync.WaitGroup, channel chan struct{}){
 		}	
 	}()
 	cmd.Process.Kill()
-	wg.Done()
 }
 
 func NFCListener()(data authenticData, error error){

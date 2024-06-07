@@ -15,15 +15,15 @@ type authenticData struct{
 }
 
 type moduleControlChannel struct{
-	authChan chan authenticData
+	// authChan chan authenticData
 	fanChan chan struct{}
 	LEDChan chan struct{}
-	segChan chan int 
+	// segChan chan int 
 
 }
+var controller moduleControlChannel
 
 func main(){
-	
 	
 	if(len(os.Args)<2){
 		fmt.Println("need enough commands to start")
@@ -44,7 +44,9 @@ func main(){
 
 func run(){
 	wg:= sync.WaitGroup{}
-	
+	controller.fanChan=make(chan struct{})
+	controller.LEDChan=make(chan struct{})
+
 	AuthOption:= auth.Options{
 		Ledger: &auth.Ledger{
 		Auth: auth.AuthRules{ // Auth disallows all by default
@@ -55,11 +57,11 @@ func run(){
 		  },
 		  }
 
-	go MQTTInit(&AuthOption)
+	go MQTTInit(&AuthOption, controller)
 	
 	authentic:=make(chan authenticData)
 	wg.Add(1)
-	_=InitContainer()
+	// _=InitContainer()
 	go userAuthentication(authentic, &wg)
 	fmt.Println("tag you NFC card for verification")
 	var inputData string
@@ -72,9 +74,7 @@ loop:
 		case data:= <-authentic:{
 			wg.Add(1)
 			fmt.Printf("%s %d",data.Name,data.age)
-			// newAuthRule := auth.AuthRule{Username: "kwon", Password: "123", Allow: true}
-			// if(data.Name!="error"){
-			// 	AuthOption.Ledger.Auth=append(AuthOption.Ledger.Auth, newAuthRule)}
+			
 			go userAuthentication(authentic, &wg)}
 		default:
 		}
