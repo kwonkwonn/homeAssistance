@@ -34,7 +34,7 @@ func MQTTInit(authHook *auth.Options, control moduleControlChannel) {
 
 	tcp := listeners.NewTCP(listeners.Config{
 		ID:      "t1",
-		Address: ":1883",
+		Address: ":8888",
 	})
 	err := server.AddListener(tcp)
 	if err != nil {
